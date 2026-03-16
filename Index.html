@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coxinha Express - O Melhor Salgado</title>
+    
+    <style>
+        :root {
+            --primaria: #e63946; /* Vermelho Fome */
+            --secundaria: #ffb703; /* Amarelo Salgado */
+            --verde: #2d6a4f;
+            --fundo: #f8f9fa;
+            --texto: #1d3557;
+            --branco: #ffffff;
+            --borda: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--fundo);
+            color: var(--texto);
+            line-height: 1.5;
+            padding-bottom: 120px;
+        }
+
+        header {
+            background: var(--primaria);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* NAVEGAÇÃO DE SESSÕES */
+        .categorias-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 8px;
+            position: sticky;
+            top: 85px;
+            background: var(--fundo);
+            padding: 10px 0;
+            z-index: 90;
+        }
+
+        .aba {
+            flex: 1;
+            background: var(--branco);
+            padding: 12px 5px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--texto);
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 2px solid var(--borda);
+            transition: 0.3s;
+        }
+
+        .aba.ativa {
+            background: var(--secundaria);
+            border-color: var(--primaria);
+            color: var(--primaria);
+            transform: scale(1.05);
+        }
+
+        /* GRID E CARDS */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--branco);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--borda);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 0.2s;
+        }
+
+        .foto-item {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .nome-item { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .preco-item { color: var(--verde); font-weight: 800; margin-bottom: 10px; }
+
+        /* CONTROLES QTD */
+        .controles {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #f1f3f5;
+            padding: 5px;
+            border-radius: 25px;
+        }
+
+        .btn-qtd {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primaria);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* RODAPÉ FIXED */
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--branco);
+            padding: 15px 20px;
+            border-top: 3px solid var(--secundaria);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+        }
+
+        .info-cliente input {
+            display: block;
+            width: 150px;
+            margin-bottom: 5px;
+            padding: 5px;
+            border: 1px solid var(--borda);
+            border-radius: 5px;
+        }
+
+        .btn-carrinho {
+            background: var(--verde);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .item-checkout {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--borda);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🥟 Coxinha Express</h1>
+    <p>O sabor que você merece!</p>
+</header>
+
+<div class="container">
+    <!-- Navegação por Sessões -->
+    <div class="categorias-nav">
+        <div class="aba ativa" onclick="mudarSessao('salgados')" id="tab-salgados">Salgados</div>
+        <div class="aba" onclick="mudarSessao('refrigerantes')" id="tab-refrigerantes">Bebidas</div>
+        <div class="aba" onclick="mudarSessao('combos')" id="tab-combos">Combos</div>
+    </div>
+
+    <!-- Área onde os produtos aparecem -->
+    <div id="vitrine" class="grid"></div>
+</div>
+
+<!-- Modal do Carrinho -->
+<div id="modal-carrinho" class="modal">
+    <div class="modal-content">
+        <h2>Seu Pedido 🛒</h2>
+        <div id="lista-carrinho" style="margin: 20px 0;"></div>
+        <h3 id="total-modal" style="text-align: right; margin-bottom: 20px;">Total: R$ 0,00</h3>
+        <button class="btn-carrinho" style="width: 100%;" onclick="enviarWhatsApp()">Finalizar no WhatsApp</button>
+        <button onclick="fecharCarrinho()" style="width: 100%; margin-top: 10px; border: none; background: none; color: gray;">Continuar Comprando</button>
+    </div>
+</div>
+
+<footer>
+    <div class="info-cliente">
+        <input type="text" id="nome" placeholder="Seu Nome">
+        <input type="text" id="endereco" placeholder="Endereço Completo">
+    </div>
+    <div style="text-align: right;">
+        <small>Total:</small><br>
+        <strong id="total-geral" style="font-size: 20px; color: var(--verde);">R$ 0,00</strong><br>
+        <button class="btn-carrinho" onclick="abrirCarrinho()">Ver Carrinho (<span id="count">0</span>)</button>
+    </div>
+</footer>
+
+<script>
+// BANCO DE DADOS DA LOJA
+const DADOS = {
+    salgados: [
+        { id: 's1', nome: "Coxinha de Frango", preco: 5.00, icone: "🍗" },
+        { id: 's2', nome: "Kibe Recheado", preco: 6.00, icone: "🧆" },
+        { id: 's3', nome: "Enroladinho Salsicha", preco: 4.50, icone: "🌭" },
+        { id: 's4', nome: "Risole de Queijo", preco: 5.00, icone: "🧀" }
+    ],
+    refrigerantes: [
+        { id: 'r1', nome: "Coca-Cola Lata", preco: 5.50, icone: "🥤" },
+        { id: 'r2', nome: "Guaraná 600ml", preco: 7.00, icone: "🍃" },
+        { id: 'r3', nome: "Suco de Laranja", preco: 8.00, icone: "🍊" }
+    ],
+    combos: [
+        { id: 'c1', nome: "Combo Individual (2 Salg + 1 Refri)", preco: 14.00, icone: "🍱" },
+        { id: 'c2', nome: "Combo Família (10 Salg + 1 Pet)", preco: 45.00, icone: "👨‍👩‍👧‍👦" }
+    ]
+};
+
+let sessaoAtiva = 'salgados';
+let carrinho = {}; // Formato: { id_produto: quantidade }
+
+// Função para mudar de aba/sessão
+function mudarSessao(novaSessao) {
+    sessaoAtiva = novaSessao;
+    
+    // Atualiza as abas (CSS)
+    document.querySelectorAll('.aba').forEach(aba => aba.classList.remove('ativa'));
+    document.getElementById(`tab-${novaSessao}`).classList.add('ativa');
+    
+    renderizarProdutos();
+}
+
+// Renderiza os produtos da sessão ativa
+function renderizarProdutos() {
+    const vitrine = document.getElementById('vitrine');
+    vitrine.innerHTML = '';
+    
+    DADOS[sessaoAtiva].forEach(item => {
+        const qtd = carrinho[item.id] || 0;
+        vitrine.innerHTML += `
+            <div class="card">
+                <div>
+                    <span class="foto-item">${item.icone}</span>
+                    <div class="nome-item">${item.nome}</div>
+                    <div class="preco-item">R$ ${item.preco.toFixed(2)}</div>
+                </div>
+                <div class="controles">
+                    <button class="btn-qtd" onclick="alterarQtd('${item.id}', -1)">-</button>
+                    <strong id="qtd-${item.id}">${qtd}</strong>
+                    <button class="btn-qtd" onclick="alterarQtd('${item.id}', 1)">+</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Lógica de adicionar/remover
+function alterarQtd(id, delta) {
+    const novaQtd = (carrinho[id] || 0) + delta;
+    
+    if (novaQtd <= 0) {
+        delete carrinho[id];
+    } else {
+        carrinho[id] = novaQtd;
+    }
+    
+    renderizarProdutos();
+    atualizarTotais();
+}
+
+function calcularTotal() {
+    let total = 0;
+    let itensTotal = 0;
+    
+    for (const id in carrinho) {
+        // Busca o produto em todas as categorias
+        const produto = [...DADOS.salgados, ...DADOS.refrigerantes, ...DADOS.combos].find(p => p.id === id);
+        if (produto) {
+            total += produto.preco * carrinho[id];
+            itensTotal += carrinho[id];
+        }
+    }
+    return { total, itensTotal };
+}
+
+function atualizarTotais() {
+    const { total, itensTotal } = calcularTotal();
+    document.getElementById('total-geral').innerText = `R$ ${total.toFixed(2)}`;
+    document.getElementById('count').innerText = itensTotal;
+}
+
+// Funções do Carrinho
+function abrirCarrinho() {
+    const { total } = calcularTotal();
+    if (total === 0) return alert("Seu carrinho está vazio!");
+    
+    const lista = document.getElementById('lista-carrinho');
+    lista.innerHTML = '';
+    
+    for (const id in carrinho) {
+        const produto = [...DADOS.salgados, ...DADOS.refrigerantes, ...DADOS.combos].find(p => p.id === id);
+        lista.innerHTML += `
+            <div class="item-checkout">
+                <span>${carrinho[id]}x ${produto.nome}</span>
+                <span>R$ ${(produto.preco * carrinho[id]).toFixed(2)}</span>
+            </div>
+        `;
+    }
+    
+    document.getElementById('total-modal').innerText = `Total: R$ ${total.toFixed(2)}`;
+    document.getElementById('modal-carrinho').style.display = 'block';
+}
+
+function fecharCarrinho() {
+    document.getElementById('modal-carrinho').style.display = 'none';
+}
+
+// WhatsApp
+function enviarWhatsApp() {
+    const nome = document.getElementById('nome').value;
+    const endereco = document.getElementById('endereco').value;
+    const { total } = calcularTotal();
+    
+    if (!nome || !endereco) return alert("Por favor, preencha nome e endereço!");
+
+    let msg = `*NOVO PEDIDO - COXINHA EXPRESS*\n`;
+    msg += `------------------------------\n`;
+    msg += `*Cliente:* ${nome}\n`;
+    msg += `*Endereço:* ${endereco}\n`;
+    msg += `------------------------------\n`;
+    
+    for (const id in carrinho) {
+        const produto = [...DADOS.salgados, ...DADOS.refrigerantes, ...DADOS.combos].find(p => p.id === id);
+        msg += `${carrinho[id]}x ${produto.nome} - R$ ${(produto.preco * carrinho[id]).toFixed(2)}\n`;
+    }
+    
+    msg += `------------------------------\n`;
+    msg += `*TOTAL: R$ ${total.toFixed(2)}*`;
+    
+    const fone = "5585992264734"; // Seu número
+    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
+}
+
+// Início automático
+window.onload = renderizarProdutos;
+</script>
+
+</body>
+</html>

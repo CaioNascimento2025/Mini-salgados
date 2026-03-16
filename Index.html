@@ -353,31 +353,78 @@ function fecharCarrinho() {
 }
 
 // WhatsApp
-function enviarWhatsApp() {
-    const nome = document.getElementById('nome').value;
-    const endereco = document.getElementById('endereco').value;
-    const { total } = calcularTotal();
-    
-    if (!nome || !endereco) return alert("Por favor, preencha nome e endereço!");
+async function enviarWhatsApp(){
 
-    let msg = `*NOVO PEDIDO - COXINHA EXPRESS*\n`;
-    msg += `------------------------------\n`;
-    msg += `*Cliente:* ${nome}\n`;
-    msg += `*Endereço:* ${endereco}\n`;
-    msg += `------------------------------\n`;
-    
-    for (const id in carrinho) {
-        const produto = [...DADOS.salgados, ...DADOS.refrigerantes, ...DADOS.combos].find(p => p.id === id);
-        msg += `${carrinho[id]}x ${produto.nome} - R$ ${(produto.preco * carrinho[id]).toFixed(2)}\n`;
-    }
-    
-    msg += `------------------------------\n`;
-    msg += `*TOTAL: R$ ${total.toFixed(2)}*`;
-    
-    const fone = "5585992264734"; // Seu número
-    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
+const nome = document.getElementById('nome').value
+const endereco = document.getElementById('endereco').value
+
+if(!nome || !endereco){
+alert("Preencha nome e endereço")
+return
 }
 
+// converter carrinho para array
+const itens = []
+
+for(const id in carrinho){
+itens.push({
+id:id,
+qtd:carrinho[id]
+})
+}
+
+try{
+
+const resposta = await fetch("/.netlify/functions/validador-pedido",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+nome:nome,
+rua:endereco,
+itens:itens
+})
+
+})
+
+const resultado = await resposta.json()
+
+if(!resultado.sucesso){
+alert(resultado.erro)
+return
+}
+
+// montar mensagem com dados do servidor
+let msg = `*NOVO PEDIDO - COXINHA EXPRESS*\n`
+msg += `------------------------------\n`
+msg += `*Cliente:* ${resultado.cliente}\n`
+msg += `*Endereço:* ${resultado.rua}\n`
+msg += `------------------------------\n`
+
+resultado.itens.forEach(item => {
+
+msg += `${item.qtd}x ${item.nome} - R$ ${item.subtotal}\n`
+
+})
+
+msg += `------------------------------\n`
+msg += `*TOTAL: R$ ${resultado.total}*`
+
+const fone = "5585992264734"
+
+window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`)
+
+}catch(erro){
+
+alert("Erro ao validar pedido")
+
+}
+
+    }
 // Início automático
 window.onload = renderizarProdutos;
 </script>
